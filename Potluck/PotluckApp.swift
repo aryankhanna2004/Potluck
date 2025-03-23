@@ -1,10 +1,3 @@
-//
-//  PotluckApp.swift
-//  Potluck
-//
-//  Created by ET Loaner on 3/21/25.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -12,10 +5,11 @@ import SwiftData
 struct PotluckApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            PotluckEvent.self,
+            Dish.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        // Change isStoredInMemoryOnly to true for testing
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
