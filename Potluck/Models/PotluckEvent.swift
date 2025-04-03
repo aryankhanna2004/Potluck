@@ -32,7 +32,7 @@ final class PotluckEvent {
 final class Dish {
     var id: UUID = UUID()
     var name: String
-    // Optionally, you can relate a dish to a potluck event
+    // Optionally, can relate a dish to a potluck event
     var event: PotluckEvent?
 
     init(name: String, event: PotluckEvent? = nil) {

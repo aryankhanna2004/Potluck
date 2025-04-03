@@ -1,6 +1,30 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject var authViewModel = AuthViewModel()
+    @State private var isLoading = true
+    
+    var body: some View {
+        Group {
+            if isLoading {
+                LoadingView()
+            } else if authViewModel.user != nil {
+                MainTabView()
+            } else {
+                LoginView()
+            }
+        }
+        .onReceive(authViewModel.$user) { _ in
+            // Once the auth state is determined, hide the loading view.
+            withAnimation {
+                isLoading = false
+            }
+        }
+        .environmentObject(authViewModel)
+    }
+}
+
+struct MainTabView: View {
     var body: some View {
         TabView {
             HomeView()
@@ -11,7 +35,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("New Event", systemImage: "plus.circle")
                 }
-            MyEventsView()   
+            MyEventsView()
                 .tabItem {
                     Label("My Events", systemImage: "list.bullet")
                 }
@@ -19,8 +43,3 @@ struct ContentView: View {
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
-}
