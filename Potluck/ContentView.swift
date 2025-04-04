@@ -1,21 +1,27 @@
 import SwiftUI
 
+import SwiftUI
+
 struct ContentView: View {
     @StateObject var authViewModel = AuthViewModel()
     @State private var isLoading = true
-    
+    @AppStorage("profileSetupComplete") var profileSetupComplete: Bool = false
+
     var body: some View {
         Group {
             if isLoading {
                 LoadingView()
             } else if authViewModel.user != nil {
-                MainTabView()
+                if profileSetupComplete {
+                    MainTabView()
+                } else {
+                    ProfileSetupView()
+                }
             } else {
                 LoginView()
             }
         }
         .onReceive(authViewModel.$user) { _ in
-            // Once the auth state is determined, hide the loading view.
             withAnimation {
                 isLoading = false
             }
@@ -23,6 +29,7 @@ struct ContentView: View {
         .environmentObject(authViewModel)
     }
 }
+
 
 struct MainTabView: View {
     var body: some View {

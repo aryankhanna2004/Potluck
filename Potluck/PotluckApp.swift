@@ -23,11 +23,11 @@ struct PotluckApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject var authViewModel = AuthViewModel()
-    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             PotluckEvent.self,
-            Dish.self
+            Dish.self,
+            UserProfile.self
         ])
         // Change isStoredInMemoryOnly to true for testing
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)

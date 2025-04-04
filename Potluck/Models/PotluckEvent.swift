@@ -40,3 +40,19 @@ final class Dish {
         self.event = event
     }
 }
+
+@Model
+class UserProfile {
+    var id: UUID = UUID()
+    var firstName: String
+    var lastName: String
+    var dietaryPreference: String
+    var allergies: [String]
+    
+    init(firstName: String, lastName: String, dietaryPreference: String, allergies: [String]) {
+        self.firstName = firstName
+        self.lastName = lastName
+        self.dietaryPreference = dietaryPreference
+        self.allergies = allergies
+    }
+}
