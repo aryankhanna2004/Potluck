@@ -18,7 +18,9 @@ struct ContentView: View {
                     ProfileSetupView()
                 }
             } else {
-                LoginView()
+                NavigationView{
+                    LoginView()
+                }
             }
         }
         .onReceive(authViewModel.$user) { _ in
