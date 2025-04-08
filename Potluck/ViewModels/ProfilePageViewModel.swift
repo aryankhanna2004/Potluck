@@ -1,3 +1,11 @@
+//
+//  ProfilePageViewModel.swift
+//  Potluck
+//
+//  Created by ET Loaner on 4/7/25.
+//
+
+
 import Foundation
 import FirebaseFirestore
 import FirebaseAuth

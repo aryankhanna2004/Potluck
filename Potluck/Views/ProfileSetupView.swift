@@ -215,11 +215,11 @@ struct ProfileSetupView: View {
                     vm.saveProfile { success in
                         if success {
                             // After successful profile save, check for a pending deep link.
-                            deepLinkHandler.handlePendingDeepLink(eventID: deepLinkManager.pendingEventID)
-                            deepLinkManager.clear()
+//                            deepLinkHandler.handlePendingDeepLink(eventID: deepLinkManager.pendingEventID)
+//                            deepLinkManager.clear()
                             
                             // Show alert if deep link was processed.
-                            showDeepLinkAlert = true
+//                            showDeepLinkAlert = true
                             profileSetupComplete = true
                         }
                     }

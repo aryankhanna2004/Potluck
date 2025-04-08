@@ -4,6 +4,8 @@ import CoreLocation
 import FirebaseAuth
 import SwiftData
 import FirebaseFirestore
+import MessageUI
+import UIKit
 
 struct EventDetailView: View {
     @StateObject private var vm: EventDetailViewModel
@@ -11,39 +13,35 @@ struct EventDetailView: View {
     
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var showEditEvent = false
-    @State private var showShareAlert = false
-    @State private var shareLink: String = ""
+    @State private var showShareSheet = false
     @State private var showDeleteAlert = false
-    @State private var showAllergyDetails = true
-    @State private var showAllAttendeesSheet = false  // controls the full list sheet
-    
+    @State private var showAttendeeManagement = false
+    @State private var showAllAttendees = false  // New state for "View More"
+
     @Environment(\.dismiss) private var dismiss
-    
-    private var isHost: Bool {
-        Auth.auth().currentUser?.uid == vm.event.hostUID
-    }
-    
+
     init(event: PotluckEvent) {
         _vm = StateObject(wrappedValue: EventDetailViewModel(event: event))
     }
-    
+
+    private var isHost: Bool {
+        Auth.auth().currentUser?.uid == vm.event.hostUID
+    }
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(spacing: 20) {
                 header
-                basicInfo
+                basicInfoSection
                 mapSection
-                if isHost { editButton }
-                if isHost { attendeesSection }  // always using a list view here
-                shareLinkButton
-                directionsButton
-                Spacer()
+                attendeesSection
+                actionsSection
             }
             .padding()
         }
         .navigationTitle("Event Detail")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            // Navigation‑bar trash icon for hosts
             if isHost {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(role: .destructive) {
@@ -53,211 +51,155 @@ struct EventDetailView: View {
                     }
                 }
             }
-            // Bottom‑bar delete button (optional)
-            deleteToolbarItem
         }
         .sheet(isPresented: $showEditEvent) {
             EditEventView(event: vm.event)
         }
-        .sheet(isPresented: $showAllAttendeesSheet) {
-            // Present full attendee list with search capabilities
+        // Host Management Sheet
+        .sheet(isPresented: $showAttendeeManagement) {
+            AttendeeManagementView(attendeesVM: attendeesVM, event: vm.event)
+        }
+        // "View More" Sheet for non-host users
+        .sheet(isPresented: $showAllAttendees) {
             AllAttendeesView(attendees: attendeesVM.attendees)
         }
-        .alert("Share Link Copied", isPresented: $showShareAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Event link copied to clipboard.")
+        .sheet(isPresented: $showShareSheet) {
+            ActivityView(activityItems: [generateDeepLink().absoluteString])
         }
         .alert("Delete Event?", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) {
                 vm.deleteEvent()
                 dismiss()
             }
-            Button("Cancel", role: .cancel) {}
+            Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to delete this event? This cannot be undone.")
+            Text("This action is irreversible.")
         }
         .onAppear {
             attendeesVM.fetchAttendees(for: vm.event.attendees)
         }
     }
-    
-    // MARK: - UI Components
-    
+
     private var header: some View {
-        Text("Event Detail")
-            .font(.largeTitle)
-            .bold()
-            .padding(.bottom, 10)
-    }
-    
-    private var basicInfo: some View {
-        let event = vm.event
-        return Group {
-            Text("Name: \(event.name)").font(.title2)
-            Text("Location: \(event.location)").font(.title3)
-            Text("Theme: \(event.theme)").font(.title3)
-            Text("Date & Time: \(event.dateTime.formatted(date: .long, time: .shortened))")
-                .font(.title3)
+        VStack(spacing: 8) {
+            Text(vm.event.name)
+                .font(.title).bold()
+            Text(vm.event.dateTime.formatted(date: .long, time: .shortened))
+                .foregroundColor(.secondary)
         }
+        .padding(.vertical)
     }
-    
+
+    private var basicInfoSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            InfoRow(label: "Location", value: vm.event.location)
+            InfoRow(label: "Theme", value: vm.event.theme)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+
     private var mapSection: some View {
-        let event = vm.event
-        return Group {
-            if let lat = event.latitude, let lon = event.longitude {
-                let coord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        Group {
+            if let lat = vm.event.latitude, let lon = vm.event.longitude {
                 Map(position: $cameraPosition) {
-                    Marker(event.name, coordinate: coord)
-                        .tint(.blue)
+                    Marker(vm.event.name, coordinate: .init(latitude: lat, longitude: lon))
+                        .tint(.green)
                 }
-                .frame(height: 300)
+                .frame(height: 250)
                 .cornerRadius(12)
-                .shadow(radius: 5)
                 .onAppear {
-                    cameraPosition = .region(
-                        MKCoordinateRegion(
-                            center: coord,
-                            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-                        )
-                    )
+                    cameraPosition = .region(.init(center: .init(latitude: lat, longitude: lon),
+                                                    span: .init(latitudeDelta: 0.01, longitudeDelta: 0.01)))
                 }
-            } else {
-                Text("No location data available.")
-                    .font(.subheadline)
-                    .foregroundColor(.red)
-                if isHost {
-                    Button("Update Event Location") {
-                        showEditEvent = true
-                    }
-                    .bold()
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.orange.opacity(0.2))
+            } else if isHost {
+                Button("Set Event Location") { showEditEvent = true }
+                    .padding().frame(maxWidth: .infinity)
+                    .background(Color.green.opacity(0.2))
                     .cornerRadius(8)
-                }
             }
         }
     }
-    
-    private var editButton: some View {
-        Button {
-            showEditEvent = true
-        } label: {
-            Label("Edit Event Details", systemImage: "pencil")
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.yellow.opacity(0.2))
-                .cornerRadius(8)
-        }
-    }
-    
+
     private var attendeesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Header row with allergy details toggle
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Attendees (\(vm.event.attendees.count))")
-                    .font(.headline)
+                    .bold()
                 Spacer()
-                Button {
-                    showAllergyDetails.toggle()
-                } label: {
-                    Text(showAllergyDetails ? "Hide Allergies" : "Show Allergies")
-                        .font(.caption)
-                }
-            }
-            
-            // Always display the attendees in a List view.
-            List {
-                // Always show up to the first 10 items
-                ForEach(attendeesVM.attendees.prefix(10), id: \UserProfile.uid) { attendee in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(attendee.firstName) \(attendee.lastName)")
-                            .font(.subheadline)
-                        if showAllergyDetails {
-                            Text("Diet: \(attendee.dietaryPreference)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("Allergies: \(attendee.allergies.joined(separator: ", "))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                // Host sees the "Manage" button; participants see "View More" if attendees > 10
+                if isHost {
+                    Button("Manage") {
+                        showAttendeeManagement = true
                     }
-                    .padding(8)
-                }
-                // Add a "View More" button only if there are more than 10 attendees.
-                if attendeesVM.attendees.count > 10 {
+                    .foregroundColor(.green)
+                } else if attendeesVM.attendees.count > 10 {
                     Button("View More") {
-                        showAllAttendeesSheet = true
+                        showAllAttendees = true
                     }
                     .foregroundColor(.blue)
                 }
             }
-            // Use a plain list style.
-            .listStyle(PlainListStyle())
-            // Optionally adjust the frame height. Here we add space for each row (assumed 60 points per row)
-            // plus additional height for the "View More" button if needed.
-            .frame(height: CGFloat( min(attendeesVM.attendees.count, 10) * 60 + (attendeesVM.attendees.count > 10 ? 60 : 0) ))
-        }
-    }
-    
-    private var shareLinkButton: some View {
-        Button {
-            if let link = generateDeepLink(for: vm.event) {
-                shareLink = link.absoluteString
-            } else {
-                shareLink = "https://potluckapp.com/event/\(vm.event.documentID)"
+            // Show only the first 10 attendees
+            ForEach(Array(attendeesVM.attendees.prefix(10)), id: \.uid) { attendee in
+                AttendeeRow(attendee: attendee, showDetails: false)
             }
-            UIPasteboard.general.string = shareLink
-            showShareAlert = true
-        } label: {
-            Label("Share Event Link", systemImage: "square.and.arrow.up")
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue.opacity(0.2))
-                .cornerRadius(8)
         }
     }
-    
-    private var directionsButton: some View {
-        let event = vm.event
-        return Group {
-            if let lat = event.latitude, let lon = event.longitude {
-                Button {
-                    let url = URL(string: "http://maps.apple.com/?daddr=\(lat),\(lon)")!
-                    UIApplication.shared.open(url)
-                } label: {
-                    Label("Get Directions", systemImage: "car.fill")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green.opacity(0.2))
-                        .cornerRadius(8)
+
+    private var actionsSection: some View {
+        VStack(spacing: 12) {
+            Button(action: { showShareSheet = true }) {
+                ActionButtonLabel(icon: "square.and.arrow.up", text: "Share Event")
+            }
+            if let lat = vm.event.latitude, let lon = vm.event.longitude {
+                Button(action: {
+                    UIApplication.shared.open(URL(string: "http://maps.apple.com/?daddr=\(lat),\(lon)")!)
+                }) {
+                    ActionButtonLabel(icon: "car.fill", text: "Directions")
                 }
             }
-        }
-    }
-    
-    private var deleteToolbarItem: some ToolbarContent {
-        Group {
             if isHost {
-                ToolbarItem(placement: .bottomBar) {
-                    Button(role: .destructive) {
-                        showDeleteAlert = true
-                    } label: {
-                        Label("Delete Event", systemImage: "trash")
-                            .foregroundColor(.red)
-                    }
+                Button(action: { showEditEvent = true }) {
+                    ActionButtonLabel(icon: "pencil", text: "Edit Event")
                 }
             }
         }
     }
+
+    private func generateDeepLink() -> URL {
+        URL(string: "https://potluckapp.com/event/\(vm.event.documentID)")!
+    }
 }
 
-// MARK: - Deep Link Stub
 
-func generateDeepLink(for event: PotluckEvent) -> URL? {
-    URL(string: "https://potluckapp.com/event/\(event.documentID)")
+
+
+
+struct AttendeeRow: View {
+    var attendee: UserProfile
+    var showDetails: Bool
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("\(attendee.firstName) \(attendee.lastName)")
+            if showDetails {
+                Text("Diet: \(attendee.dietaryPreference)").font(.caption)
+                Text("Allergies: \(attendee.allergies.joined(separator: ", "))").font(.caption)
+            }
+        }.padding(8).background(Color(.systemBackground)).cornerRadius(8)
+    }
 }
+
+struct ActionButtonLabel: View {
+    var icon: String, text: String
+    var body: some View {
+        Label(text, systemImage: icon)
+            .frame(maxWidth: .infinity).padding()
+            .background(Color.blue.opacity(0.2)).cornerRadius(10)
+    }
+}
+
 
 // MARK: - Full Attendees View with Search Capability
 
@@ -303,5 +245,116 @@ struct AllAttendeesView: View {
                 }
             }
         }
+    }
+}
+
+
+
+struct ActivityView: UIViewControllerRepresentable {
+    var activityItems: [Any]
+    var applicationActivities: [UIActivity]? = nil
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+struct AttendeeManagementView: View {
+    @ObservedObject var attendeesVM: AttendeesViewModel
+    var event: PotluckEvent
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedAttendee: UserProfile?
+    @State private var showProfileView = false
+
+    var body: some View {
+        NavigationView {
+            List {
+                ForEach(attendeesVM.attendees, id: \.uid) { attendee in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("\(attendee.firstName) \(attendee.lastName)")
+                                .font(.headline)
+                            Text(attendee.dietaryPreference)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Button(action: {
+                            removeAttendee(attendee)
+                        }) {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedAttendee = attendee
+                        showProfileView = true
+                    }
+                }
+            }
+            .navigationTitle("Manage Attendees")
+            .navigationBarItems(trailing: Button("Done") { dismiss() })
+            .sheet(isPresented: $showProfileView) {
+                if let profile = selectedAttendee {
+                    AttendeeProfileDetailView(profile: profile)
+                }
+            }
+        }
+    }
+
+    private func removeAttendee(_ attendee: UserProfile) {
+        let db = Firestore.firestore()
+        db.collection("events").document(event.documentID).updateData([
+            "attendees": FieldValue.arrayRemove([attendee.uid])
+        ]) { error in
+            if let error = error {
+                print("Error removing attendee: \(error.localizedDescription)")
+            } else {
+                attendeesVM.attendees.removeAll(where: { $0.uid == attendee.uid })
+            }
+        }
+    }
+}
+
+// Detailed Profile View for Attendees
+struct AttendeeProfileDetailView: View {
+    var profile: UserProfile
+    var body: some View {
+        VStack(spacing: 15) {
+            Image(systemName: "person.crop.circle")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .foregroundColor(.green)
+
+            Text("\(profile.firstName) \(profile.lastName)")
+                .font(.title)
+                .bold()
+
+            InfoRow(label: "Diet", value: profile.dietaryPreference)
+            InfoRow(label: "Allergies", value: profile.allergies.joined(separator: ", "))
+
+            Spacer()
+        }
+        .padding()
+    }
+}
+
+struct InfoRow: View {
+    var label: String
+    var value: String
+
+    var body: some View {
+        HStack {
+            Text(label).bold()
+            Spacer()
+            Text(value)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(8)
     }
 }

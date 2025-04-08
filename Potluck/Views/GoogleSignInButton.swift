@@ -7,13 +7,12 @@ struct GoogleSignInButton: View {
     var body: some View {
         Button(action: googleSignIn) {
             HStack {
-                Image(systemName: "globe") // Optionally, use a Google logo image here.
                 Text("Sign in with Google")
                     .foregroundColor(.white)
                     .padding()
                     .frame(maxWidth: .infinity)
             }
-            .background(Color.red)
+            .background(Color.purple)
             .cornerRadius(8)
         }
     }
