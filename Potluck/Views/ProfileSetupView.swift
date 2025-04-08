@@ -1,18 +1,23 @@
 import SwiftUI
+import FirebaseFirestore
+import FirebaseAuth
 
 struct ProfileSetupView: View {
     @AppStorage("profileSetupComplete") var profileSetupComplete = false
     @StateObject private var vm = ProfileViewModel()
+    @StateObject private var deepLinkHandler = DeepLinkHandlerViewModel() // Handles deep link Firestore updates
+    @EnvironmentObject var deepLinkManager: DeepLinkManager            // Holds the pending deep link eventID
     @State private var currentStep = 0
-    
-    // Options
+    @State private var showDeepLinkAlert = false
+
+    // Dietary and allergy options
     let dietaryOptions = ["No Preference","Vegetarian","Vegan","Gluten‑Free","Keto","Paleo","Other"]
     let allergyOptions = ["Peanuts","Shellfish","Dairy","Eggs","Other"]
     
     var body: some View {
         NavigationView {
             ZStack {
-                // Background
+                // Background gradient
                 LinearGradient(
                     gradient: Gradient(colors: [Color.green.opacity(0.6), Color.green.opacity(0.2)]),
                     startPoint: .top,
@@ -30,7 +35,7 @@ struct ProfileSetupView: View {
                     Text("Simplifying Group Meals")
                         .font(.title).bold()
                     
-                    // Steps
+                    // Step views
                     Group {
                         switch currentStep {
                         case 0: introStep
@@ -43,7 +48,7 @@ struct ProfileSetupView: View {
                 }
                 .padding()
                 
-                // Loading overlay
+                // Loading overlay if needed
                 if vm.isLoading {
                     Color.black.opacity(0.3).ignoresSafeArea()
                     ProgressView("Saving…")
@@ -53,7 +58,7 @@ struct ProfileSetupView: View {
                 }
             }
             .navigationBarHidden(true)
-            // Error alert
+            // Error alert from ProfileViewModel if needed
             .alert("Error", isPresented: Binding<Bool>(
                 get: { vm.errorMessage != nil },
                 set: { newVal in if !newVal { vm.errorMessage = nil } }
@@ -62,10 +67,16 @@ struct ProfileSetupView: View {
             } message: {
                 Text(vm.errorMessage ?? "")
             }
+            // Alert to notify user when added to an event via a deep link
+            .alert(isPresented: $showDeepLinkAlert) {
+                Alert(title: Text("Welcome!"),
+                      message: Text("You have been added to the event."),
+                      dismissButton: .default(Text("OK")))
+            }
         }
     }
     
-    // MARK: - Steps
+    // MARK: - Step Views
     
     private var introStep: some View {
         VStack(spacing: 15) {
@@ -94,14 +105,20 @@ struct ProfileSetupView: View {
                 .cornerRadius(10)
             
             HStack {
-                Button("Previous") { currentStep = 0 }
-                    .buttonStyle(.borderedProminent).tint(.green)
+                Button("Previous") {
+                    currentStep = 0
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
                 
                 Spacer()
                 
-                Button("Next") { currentStep = 2 }
-                    .buttonStyle(.borderedProminent).tint(.green)
-                    .disabled(vm.firstName.isEmpty || vm.lastName.isEmpty)
+                Button("Next") {
+                    currentStep = 2
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+                .disabled(vm.firstName.isEmpty || vm.lastName.isEmpty)
             }
             .padding(.top)
         }
@@ -125,7 +142,8 @@ struct ProfileSetupView: View {
                             if vm.selectedDietaryPreferences.contains(option) {
                                 vm.selectedDietaryPreferences.remove(option)
                             } else {
-                                vm.selectedDietaryPreferences = [option]  // single‑select
+                                // For single‑selection, we clear previous options.
+                                vm.selectedDietaryPreferences = [option]
                             }
                         }
                 }
@@ -133,13 +151,19 @@ struct ProfileSetupView: View {
             .padding()
             
             HStack {
-                Button("Previous") { currentStep = 1 }
-                    .buttonStyle(.borderedProminent).tint(.green)
+                Button("Previous") {
+                    currentStep = 1
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
                 
                 Spacer()
                 
-                Button("Next") { currentStep = 3 }
-                    .buttonStyle(.borderedProminent).tint(.green)
+                Button("Next") {
+                    currentStep = 3
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
             }
             .padding(.top)
         }
@@ -179,19 +203,29 @@ struct ProfileSetupView: View {
             }
             
             HStack {
-                Button("Previous") { currentStep = 2 }
-                    .buttonStyle(.borderedProminent).tint(.green)
+                Button("Previous") {
+                    currentStep = 2
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
                 
                 Spacer()
                 
                 Button("Complete") {
                     vm.saveProfile { success in
                         if success {
+                            // After successful profile save, check for a pending deep link.
+                            deepLinkHandler.handlePendingDeepLink(eventID: deepLinkManager.pendingEventID)
+                            deepLinkManager.clear()
+                            
+                            // Show alert if deep link was processed.
+                            showDeepLinkAlert = true
                             profileSetupComplete = true
                         }
                     }
                 }
-                .buttonStyle(.borderedProminent).tint(.green)
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
             }
             .padding(.top)
         }

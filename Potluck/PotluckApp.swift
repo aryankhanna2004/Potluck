@@ -23,6 +23,8 @@ struct PotluckApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject var authViewModel = AuthViewModel()
+    @StateObject var deepLinkManager = DeepLinkManager()
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             PotluckEvent.self,
@@ -41,6 +43,10 @@ struct PotluckApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(deepLinkManager)
+                .onOpenURL { url in
+                                    deepLinkManager.handleDeepLink(url: url)
+                                }
         }
         .modelContainer(sharedModelContainer)
       }
