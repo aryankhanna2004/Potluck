@@ -29,7 +29,7 @@ struct PotluckApp: App {
             Dish.self,
             UserProfile.self
         ])
-        // Change isStoredInMemoryOnly to true for testing
+       
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
