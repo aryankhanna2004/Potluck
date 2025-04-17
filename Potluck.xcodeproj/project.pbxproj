@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A7A46932DB1537A0003D5BE /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 7A7A46922DB153670003D5BE /* .gitignore */; };
 		DEFC036D2D9F29AE00C139E5 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = DEFC036C2D9F29AE00C139E5 /* FirebaseAnalytics */; };
 		DEFC036F2D9F29AE00C139E5 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DEFC036E2D9F29AE00C139E5 /* FirebaseAuth */; };
 		DEFC03712D9F29AE00C139E5 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = DEFC03702D9F29AE00C139E5 /* FirebaseCore */; };
@@ -21,7 +20,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7A7A46922DB153670003D5BE /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		DEFC038E2D9F318E00C139E5 /* Potluck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Potluck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -72,7 +70,6 @@
 			children = (
 				DEEDB2AA2D8E5C4D003C87DE /* Potluck */,
 				DEFC038E2D9F318E00C139E5 /* Potluck.app */,
-				7A7A46922DB153670003D5BE /* .gitignore */,
 			);
 			sourceTree = "<group>";
 		};
@@ -154,7 +151,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A7A46932DB1537A0003D5BE /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

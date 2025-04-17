@@ -56,7 +56,7 @@ class UserEventsViewModel: ObservableObject {
         }
     }
     
-    /// Deletes the event both locally and from Firestore.
+    // Deletes the event both locally and from Firestore.
     func deleteEvent(eventID: String) {
         // Remove locally
         eventsDict.removeValue(forKey: eventID)
@@ -83,7 +83,7 @@ class AttendeesViewModel: ObservableObject {
     @Published var attendees: [UserProfile] = []
     private var listener: ListenerRegistration?
     
-    /// Fetch profiles for the given attendee UIDs. Note that Firestore’s "in" query supports up to 10 items.
+    // Fetch profiles for the given attendee UIDs. 
     func fetchAttendees(for attendeeIDs: [String]) {
         guard !attendeeIDs.isEmpty else {
             self.attendees = []

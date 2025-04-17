@@ -13,10 +13,10 @@ final class PotluckEvent {
     var longitude: Double?
     var documentID: String = ""
     
-    // New fields for event management:
-    var hostUID: String           // The UID of the event creator/host.
-    var attendees: [String]       // UIDs of users who are attending.
-    var invitedUsers: [String]    // UIDs of users who have been invited.
+    // for event management:
+    var hostUID: String
+    var attendees: [String]
+    var invitedUsers: [String]    
     
     init(documentID: String = "",
          name: String,
@@ -42,18 +42,7 @@ final class PotluckEvent {
     }
 }
 
-@Model
-final class Dish {
-    var id: UUID = UUID()
-    var name: String
-    // Optionally, relate a dish to a potluck event.
-    var event: PotluckEvent?
 
-    init(name: String, event: PotluckEvent? = nil) {
-        self.name = name
-        self.event = event
-    }
-}
 
 @Model
 class UserProfile {
@@ -74,7 +63,6 @@ class UserProfile {
 }
 
 extension UserProfile {
-    /// Initialize from a Firestore DocumentSnapshot.
     convenience init?(document: DocumentSnapshot) {
         guard let data = document.data(),
               let firstName = data["firstName"] as? String,
@@ -91,8 +79,6 @@ extension UserProfile {
 }
 
 extension PotluckEvent {
-    /// Initialize a PotluckEvent from a Firestore DocumentSnapshot.
-    /// Returns nil if required fields are missing or of wrong type.
     convenience init?(document: DocumentSnapshot) {
         guard let data = document.data(),
               let name = data["name"] as? String,
@@ -122,12 +108,11 @@ extension PotluckEvent {
         )
     }
 
-    /// Convenience initializer for QueryDocumentSnapshot.
     convenience init?(document: QueryDocumentSnapshot) {
         self.init(document: document as DocumentSnapshot)
     }
 
-    /// Converts the model into a Firestore-ready dictionary.
+    // Converts the model into a Firestore-ready dictionary.
     var firestoreData: [String: Any] {
         return [
             "name": name,
@@ -144,3 +129,6 @@ extension PotluckEvent {
         ]
     }
 }
+
+
+

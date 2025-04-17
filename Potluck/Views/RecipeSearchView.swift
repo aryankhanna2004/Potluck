@@ -7,58 +7,8 @@
 
 import SwiftUI
 
-//Model
-struct Recipe: Identifiable, Codable {
-    let id: Int
-    let title: String
-    let image: String?
-    
-}
-
-
-//View Model
-@MainActor
-class RecipeSearchViewModel: ObservableObject {
-    @Published var searchQuery = ""
-    @Published var recipes: [Recipe] = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
-    
-
-    //key hidden, for security.
-    //hiding method is weak, should be upgraded
-    let apiKey = Secrets.spoonacularAPIKey
-
-    func searchRecipes() async {
-        guard !searchQuery.isEmpty else { return }
-        isLoading = true
-        errorMessage = nil
-
-        let query = searchQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let urlString = "https://api.spoonacular.com/recipes/complexSearch?query=\(query)&number=10&apiKey=\(apiKey)"
-
-        
-        guard let url = URL(string: urlString) else {
-            errorMessage = "Invalid URL."
-            isLoading = false
-            return
-        }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let decoded = try JSONDecoder().decode(RecipeSearchResponse.self, from: data)
-            recipes = decoded.results
-        } catch {
-            print("API error: \(error)")
-            errorMessage = "Failed to load recipes."
-        }
-
-        isLoading = false
-    }
-}
-
-struct RecipeSearchResponse: Codable {
-    let results: [Recipe]
+struct Secrets {
+    static let spoonacularAPIKey = "APIHEREHREHRHE" //use your own API KEY when you sign up on Spoonacular.com
 }
 
 //View

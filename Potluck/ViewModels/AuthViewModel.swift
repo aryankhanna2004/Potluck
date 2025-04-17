@@ -1,5 +1,6 @@
 import FirebaseAuth
 import Combine
+import FirebaseFirestore   
 
 class AuthViewModel: ObservableObject {
     @Published var user: User?

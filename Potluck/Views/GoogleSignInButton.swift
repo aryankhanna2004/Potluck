@@ -18,23 +18,19 @@ struct GoogleSignInButton: View {
     }
     
     func googleSignIn() {
-        // Ensure Firebase is configured and get the client ID.
         guard let clientID = FirebaseApp.app()?.options.clientID else {
             print("Missing clientID")
             return
         }
-        // Create and set the Google Sign-In configuration.
         let config = GIDConfiguration(clientID: clientID)
         GIDSignIn.sharedInstance.configuration = config
         
-        // Retrieve the root view controller for presenting the sign-in UI.
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = windowScene.windows.first?.rootViewController else {
             print("No root view controller found")
             return
         }
         
-        // Start the sign-in flow using the new API.
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
             if let error = error {
                 print("Google sign in error: \(error.localizedDescription)")

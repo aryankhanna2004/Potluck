@@ -2,7 +2,7 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
-/// A view for hosts to edit PotluckEvent details: name, location, theme, and date/time.
+// A view for hosts to edit PotluckEvent details: name, location, theme, and date/time.
 struct EditEventView: View {
     let event: PotluckEvent
     @Environment(\.dismiss) var dismiss
@@ -95,7 +95,6 @@ struct EditEventView: View {
 // MARK: - Placeholder Modifier
 
 extension View {
-    /// Overlays a placeholder view when a condition is met.
     func placeholder<Content: View>(
         when shouldShow: Bool,
         alignment: Alignment = .leading,

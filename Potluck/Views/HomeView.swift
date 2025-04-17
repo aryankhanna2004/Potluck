@@ -114,6 +114,3 @@ private struct EventRow: View {
     }
 }
 
-#Preview{
-    HomeView()
-}

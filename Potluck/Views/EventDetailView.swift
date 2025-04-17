@@ -16,7 +16,7 @@ struct EventDetailView: View {
     @State private var showShareSheet = false
     @State private var showDeleteAlert = false
     @State private var showAttendeeManagement = false
-    @State private var showAllAttendees = false  // New state for "View More"
+    @State private var showAllAttendees = false
 
     @Environment(\.dismiss) private var dismiss
 
@@ -55,11 +55,9 @@ struct EventDetailView: View {
         .sheet(isPresented: $showEditEvent) {
             EditEventView(event: vm.event)
         }
-        // Host Management Sheet
         .sheet(isPresented: $showAttendeeManagement) {
             AttendeeManagementView(attendeesVM: attendeesVM, event: vm.event)
         }
-        // "View More" Sheet for non-host users
         .sheet(isPresented: $showAllAttendees) {
             AllAttendeesView(attendees: attendeesVM.attendees)
         }
@@ -261,87 +259,7 @@ struct ActivityView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
-struct AttendeeManagementView: View {
-    @ObservedObject var attendeesVM: AttendeesViewModel
-    var event: PotluckEvent
-    @Environment(\.dismiss) private var dismiss
-    @State private var selectedAttendee: UserProfile?
-    @State private var showProfileView = false
 
-    var body: some View {
-        NavigationView {
-            List {
-                ForEach(attendeesVM.attendees, id: \.uid) { attendee in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("\(attendee.firstName) \(attendee.lastName)")
-                                .font(.headline)
-                            Text(attendee.dietaryPreference)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        Button(action: {
-                            removeAttendee(attendee)
-                        }) {
-                            Image(systemName: "trash")
-                                .foregroundColor(.red)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        selectedAttendee = attendee
-                        showProfileView = true
-                    }
-                }
-            }
-            .navigationTitle("Manage Attendees")
-            .navigationBarItems(trailing: Button("Done") { dismiss() })
-            .sheet(isPresented: $showProfileView) {
-                if let profile = selectedAttendee {
-                    AttendeeProfileDetailView(profile: profile)
-                }
-            }
-        }
-    }
-
-    private func removeAttendee(_ attendee: UserProfile) {
-        let db = Firestore.firestore()
-        db.collection("events").document(event.documentID).updateData([
-            "attendees": FieldValue.arrayRemove([attendee.uid])
-        ]) { error in
-            if let error = error {
-                print("Error removing attendee: \(error.localizedDescription)")
-            } else {
-                attendeesVM.attendees.removeAll(where: { $0.uid == attendee.uid })
-            }
-        }
-    }
-}
-
-// Detailed Profile View for Attendees
-struct AttendeeProfileDetailView: View {
-    var profile: UserProfile
-    var body: some View {
-        VStack(spacing: 15) {
-            Image(systemName: "person.crop.circle")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .foregroundColor(.green)
-
-            Text("\(profile.firstName) \(profile.lastName)")
-                .font(.title)
-                .bold()
-
-            InfoRow(label: "Diet", value: profile.dietaryPreference)
-            InfoRow(label: "Allergies", value: profile.allergies.joined(separator: ", "))
-
-            Spacer()
-        }
-        .padding()
-    }
-}
 
 struct InfoRow: View {
     var label: String

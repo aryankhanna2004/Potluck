@@ -4,7 +4,7 @@
 //
 //  Created by ET Loaner on 4/7/25.
 //
-
+// for future
 import SwiftUI
 import FirebaseFirestore
 import FirebaseAuth
@@ -14,7 +14,6 @@ final class DeepLinkManager: ObservableObject {
     @Published var pendingEventID: String?
     
     func handleDeepLink(url: URL) {
-        // Ensure the URL scheme and host match (adjust these as needed)
         guard url.scheme == "https", url.host == "potluckapp.com" else { return }
         
         // Expecting URL paths like: /event/<eventID>
@@ -32,11 +31,7 @@ final class DeepLinkManager: ObservableObject {
 
 
 
-/// ViewModel to process deep links and add the user to the event.
 class DeepLinkHandlerViewModel: ObservableObject {
-    
-    /// Adds the signed‑in user to the event's attendee list if the eventID is provided.
-    /// - Parameter eventID: The event identifier extracted from a deep link.
     func handlePendingDeepLink(eventID: String?) {
         guard let eventID = eventID, let userID = Auth.auth().currentUser?.uid else {
             return

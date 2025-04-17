@@ -5,8 +5,8 @@ import FirebaseAuth
 struct ProfileSetupView: View {
     @AppStorage("profileSetupComplete") var profileSetupComplete = false
     @StateObject private var vm = ProfileViewModel()
-    @StateObject private var deepLinkHandler = DeepLinkHandlerViewModel() // Handles deep link Firestore updates
-    @EnvironmentObject var deepLinkManager: DeepLinkManager            // Holds the pending deep link eventID
+    @StateObject private var deepLinkHandler = DeepLinkHandlerViewModel()
+    @EnvironmentObject var deepLinkManager: DeepLinkManager
     @State private var currentStep = 0
     @State private var showDeepLinkAlert = false
 
@@ -67,7 +67,6 @@ struct ProfileSetupView: View {
             } message: {
                 Text(vm.errorMessage ?? "")
             }
-            // Alert to notify user when added to an event via a deep link
             .alert(isPresented: $showDeepLinkAlert) {
                 Alert(title: Text("Welcome!"),
                       message: Text("You have been added to the event."),
@@ -75,9 +74,7 @@ struct ProfileSetupView: View {
             }
         }
     }
-    
-    // MARK: - Step Views
-    
+        
     private var introStep: some View {
         VStack(spacing: 15) {
             Text("Potluck makes organizing group meals easy, tracks dietary needs anonymously, and ensures safe and enjoyable dining for everyone.")
