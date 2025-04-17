@@ -66,6 +66,15 @@ struct HomeView: View {
             }
             .padding(.horizontal)
             .navigationTitle("Home")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: RecipeSearchView()) {
+                        Image(systemName: "book")
+                            .imageScale(.large)
+                            .accessibilityLabel("Search Recipes")
+                    }
+                }
+            }
             .sheet(isPresented: $showingNewEvent) { NewEventView() }
             .alert("Delete Event?", isPresented: $showDeleteAlert, presenting: eventToDelete) { event in
                 Button("Delete", role: .destructive) {
@@ -103,4 +112,8 @@ private struct EventRow: View {
         }
         .padding(.vertical, 5)
     }
+}
+
+#Preview{
+    HomeView()
 }
