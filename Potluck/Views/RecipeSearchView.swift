@@ -7,9 +7,8 @@
 
 import SwiftUI
 
-struct Secrets {
-    static let spoonacularAPIKey = "APIHEREHREHRHE" //use your own API KEY when you sign up on Spoonacular.com
-}
+
+let spoonacularAPIKey = Secrets.spoonacularAPIKey //use your own API KEY when you sign up on Spoonacular.com
 
 //View
 struct RecipeSearchView: View {
