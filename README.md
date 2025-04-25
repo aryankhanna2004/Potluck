@@ -9,15 +9,24 @@ The application is built using SwiftUI and Firebase, featuring real-time updates
 Potluck/                      # Root directory
 ├── Assets.xcassets/          # Asset catalog containing app icons and images
 ├── Models/                   # Data models
-│   └── PotluckEvent.swift   # Core data models for events, dishes, and user profiles
+│   ├── PotluckEvent.swift   # Core data models for events and user profiles
+│   └── Recipe.swift         # Recipe and dish data models
 ├── ViewModels/              # MVVM architecture view models
 │   ├── AuthViewModel.swift  # Authentication logic
 │   ├── DeepLinkManager.swift # Deep linking functionality
-│   └── EventViewModels.swift # Event management logic
+│   ├── EventViewModels.swift # Event management logic
+│   ├── ProfileViewModel.swift # Profile management
+│   ├── RecipeVM.swift      # Recipe search and detail management
+│   └── UserEventsViewModel.swift # User event listing management
 ├── Views/                   # SwiftUI views
+│   ├── AttendeeManagementView.swift # Attendee management
+│   ├── EditEventView.swift  # Event editing
+│   ├── EventDetailView.swift # Event details
 │   ├── HomeView.swift      # Main event listing view
 │   ├── LoginView.swift     # Authentication views
-│   └── ProfileSetupView.swift # User profile setup
+│   ├── ProfileSetupView.swift # User profile setup
+│   ├── RecipeDetailView.swift # Recipe details
+│   └── RecipeSearchView.swift # Recipe search
 └── PotluckApp.swift        # Application entry point and configuration
 ```
 
